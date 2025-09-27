@@ -1,17 +1,3 @@
-I want to create a salesforce app named "CCD Management" which will manage my life
-
-1) The App should have a sections for "Financial Council"
-    where i will update my monthly salary details every month end, i will update my expenses there and will track expenses analytically very well.
-
-Expenses greater than 100 rs should be sent to someone as approver with note, Approver will approve and release amount whenever i want to spend something > 100
-It should track my EMI, how much i gave pocket money to bro/sis, how many debts covered,
-this should be sent as email every week and should be visible in section.
-
-2) A Section "Zioto" which is my personal twitter
-3) A Section "Deliverables", where at every month end week ill get email to fill next month deliverables in this section
-4) A Section "CLothes Management" where i will upload my cloth details, so system will suggest best round robin where i dont repeat my clothes as circle as much long as it can
-5) for all the sections i neeed internal AI for sugeestions if possible
-
 ## **Module 1 – Foundations of the Stock Market**
 **Purpose:** Build a strong understanding of markets, participants, and basic concepts.  
 **Units:**  
