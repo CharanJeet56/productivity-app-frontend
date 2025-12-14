@@ -1,121 +1,53 @@
 Perfect 👍
-We’ll go **slow, practical, and very explicit** now.
-No skipping, no assumptions. This is **exactly how a mentor would walk you through Phase 0**.
+That clarification is important. Let’s **lock Phase 0 properly** with these two constraints:
+
+* ✅ **RAML will be created and maintained in Anypoint Studio (not Exchange first)**
+* ✅ **Project name = `employee-api-new`**
+
+I’ll restate **Phase 0 cleanly**, aligned exactly to *your setup*, and then we’ll move forward without rework.
 
 ---
 
-# 🟢 PHASE 0 – Environment & Foundation Setup
+# 🟢 PHASE 0 – Environment & Project Setup
 
-*(Most important phase – if this is wrong, everything later breaks)*
-
----
-
-## 🎯 Objective of Phase 0
-
-Before writing **even 1 line of RAML or Mule flow**, we must ensure:
-
-1. MuleSoft can **run locally**
-2. MySQL is **ready to store employee data**
-3. Project skeleton is **created correctly**
-4. We understand **what we are building and where**
-
-Think of Phase 0 as **laying the foundation of a building**.
+**(Updated for: RAML in Studio + project name `employee-api-new`)**
 
 ---
 
-## 0.1 – Understand the Final Architecture (WHY first?)
+## 🎯 Goal of Phase 0 (Very clear)
 
-### ❓ Why we do this
+By the end of Phase 0, you should have:
 
-If you don’t know **what talks to what**, you’ll get confused later when:
+* A **working Mule project** named `employee-api-new`
+* A **local RAML file** that will evolve phase by phase
+* A **ready MySQL database**
+* A **clean folder structure for RAML fragments**
 
-* TLS fails
-* DB insert fails
-* APIKit creates extra flows
-
-### 🧠 Final Architecture (simple words)
-
-```
-[Mule Client]
-   |
-   |  (HTTPS + Client Certificate)
-   |
-[Employee API - Mule]
-   |
-   |  (DB Connector)
-   |
-[MySQL Database]
-```
-
-* Mule API exposes Employee CRUD
-* MySQL stores employee data
-* TLS secures communication
-* Mule client proves mTLS
-
-👉 **Keep this picture in mind always**
+No business logic yet. No TLS yet.
 
 ---
 
-## 0.2 – Verify Anypoint Studio (Mule Runtime)
+## 0.1 – Confirm Tools (Quick check)
 
-### ❓ Why this matters
+### ✅ Anypoint Studio
 
-Different runtimes behave differently (especially TLS & APIKit).
+* Studio 7.x
+* Mule Runtime 4.x
 
-### ✅ What to check
-
-1. Open **Anypoint Studio**
-2. Go to:
-
-   ```
-   Help → About Anypoint Studio
-   ```
-3. Confirm:
-
-   * Mule Runtime: **4.x**
-   * Studio version: **7.x**
-
-👉 If Mule runtime is missing:
-
-* Add Mule Runtime via:
-
-  ```
-  Help → Install New Software → Mule Runtimes
-  ```
+👉 This is fine if you already reached the “Run” stage earlier.
 
 ---
 
-## 0.3 – Verify MySQL Setup (Very Important)
+### ✅ MySQL (already discussed, quick recap)
 
-### ❓ Why we do this now
-
-Later, when CRUD doesn’t work, you should not be guessing:
-
-* “Is DB working or not?”
-
-We verify DB **now**, once.
-
----
-
-### ✅ Step 1: Open MySQL Workbench
-
-* Login using:
-
-  * username: `root`
-  * password: (your reset password)
-
----
-
-### ✅ Step 2: Create Database
+Database:
 
 ```sql
 CREATE DATABASE IF NOT EXISTS employee_db;
 USE employee_db;
 ```
 
----
-
-### ✅ Step 3: Create Employee Table
+Table:
 
 ```sql
 CREATE TABLE employee (
@@ -127,86 +59,81 @@ CREATE TABLE employee (
 );
 ```
 
----
-
-### ✅ Step 4: Test Insert (sanity check)
-
-```sql
-INSERT INTO employee (name, email, department, salary)
-VALUES ('Test User', 'test@mail.com', 'IT', 50000);
-```
-
-```sql
-SELECT * FROM employee;
-```
-
-✔ If this works → DB is ready
-❌ If this fails → STOP and fix DB
+👉 Stop here if DB fails.
 
 ---
 
-## 0.4 – Create Mule Project (Correct Way)
+## 0.2 – Create Mule Project (Design-First, RAML in Studio)
 
-### ❓ Why design-first
+### ✅ Step-by-step (IMPORTANT)
 
-Your mentor explicitly asked:
+1. Open **Anypoint Studio**
 
-> “Implement API using RAML and fragments”
+2. Go to:
 
-That means **Design First**, not flow-first.
+   ```
+   File → New → Mule Project
+   ```
 
----
+3. Fill details:
 
-### ✅ Step 1: Create New Mule Project
+   * **Project Name:** `employee-api-new`
+   * **Runtime:** Mule 4.x
+   * ✅ Check **Add APIKit components**
+   * API Definition:
 
-In Studio:
+     * Select **New RAML file**
+     * File name: `employee-api.raml`
+     * Location: `src/main/resources/api`
 
-```
-File → New → Mule Project
-```
-
-Fill:
-
-* Project Name: `employee-api`
-* Runtime: Mule 4.x
-* Check: **Add APIKit components**
-* API Definition:
-
-  * **New RAML file**
-  * Name: `employee-api.raml`
-  * Location: `src/main/resources/api`
-
-👉 Click **Finish**
+4. Click **Finish**
 
 ---
 
-### ✅ Step 2: Verify Project Structure
+### ✅ What Studio creates for you
 
-You should see:
+* APIKit router
+* A default main flow
+* RAML file linked to the router
+
+This is **exactly what we want**.
+
+---
+
+## 0.3 – Verify Project Structure (Don’t skip)
+
+Your workspace should now look like:
 
 ```
-employee-api
+employee-api-new
  └── src
      └── main
+         ├── mule
+         │   └── employee-api-new.xml
          └── resources
              └── api
                  └── employee-api.raml
 ```
 
-If this structure is wrong → stop and fix.
+If:
+
+* RAML is missing ❌
+* APIKit router is missing ❌
+  → stop and recreate project properly.
 
 ---
 
-## 0.5 – Decide Folder Structure for Fragments (WHY now?)
+## 0.4 – Create RAML Fragment Folder Structure (Now, not later)
 
-### ❓ Why plan folders early
+Since **all fragment types must exist in this project**, create them **now**.
 
-RAML fragments grow fast.
-If you don’t organize now → chaos later.
+Inside:
 
----
+```
+src/main/resources/api/
+```
 
-### ✅ Create these folders under `api/`
+Create folders:
 
 ```
 api/
@@ -219,68 +146,297 @@ api/
  └── security/
 ```
 
-👉 These directly map to:
+### ❓ Why now?
 
-* DataTypes
-* Traits
-* Resource Types
-* Examples
-* Libraries
-* Security Schemes
+Because:
 
-This is **enterprise-standard structure**.
+* Later RAML will reference these paths
+* Avoids broken includes
+* Keeps design clean from day one
 
 ---
 
-## 0.6 – Decide Ports & URLs (Avoid conflicts later)
+## 0.5 – Decide Local API URL (Fix it early)
 
-### ❓ Why now
+For this project:
 
-TLS + multiple apps → port conflicts are common.
+* Protocol (for now): `HTTP`
+* Port: `8081`
+* Base path (later): `/employees`
 
-### ✅ Decide:
+Final API (later):
 
-* Employee API port: `8081`
-* Mule client port (later): `8082`
+```
+http://localhost:8081/employees
+```
 
-Write it down.
-
----
-
-## 0.7 – What NOT to do in Phase 0 ❌
-
-* ❌ Don’t write CRUD logic yet
-* ❌ Don’t add TLS yet
-* ❌ Don’t import Exchange RAML
-* ❌ Don’t generate flows again and again
-
-Phase 0 is **setup only**.
+TLS will come **much later**, not now.
 
 ---
 
-## ✅ Phase 0 Completion Checklist
+## 0.6 – What We Are NOT Doing Yet ❌
 
-Before moving to Phase 1, confirm:
+Just to be very clear:
 
-✔ Anypoint Studio opens without errors
-✔ Mule runtime available
-✔ MySQL DB + table created
-✔ Mule project created using APIKit
-✔ RAML file exists
-✔ Folder structure ready
+* ❌ No CRUD logic
+* ❌ No DB connector in Mule
+* ❌ No TLS / certificates
+* ❌ No Exchange publish
+* ❌ No RAML fragments written yet
 
-If **any one** is ❌ → fix before moving on.
-
----
-
-## 🧠 Mentor-Level Explanation (remember this)
-
-> “Phase 0 ensures infrastructure readiness, database availability, and a clean design-first project setup, which prevents downstream issues in APIKit, TLS, and database integration.”
+Phase 0 = **only setup & structure**
 
 ---
 
-If you’re ready, say:
+## ✅ Phase 0 Completion Checklist (Must be ALL ✔)
 
-👉 **“Proceed to Phase 1 – Hello World RAML + APIKit”**
+Confirm before moving on:
 
-We’ll then write your **first RAML** and generate **first flow**, step by step.
+✔ Project name is `employee-api-new`
+✔ RAML file exists in Studio
+✔ APIKit router is present
+✔ DB and table exist
+✔ Fragment folders created
+✔ Project runs without errors
+
+If **any item is ❌**, tell me exactly which one.
+
+---
+
+## 🧠 Mentor-style summary (remember this line)
+
+> “Phase 0 prepares the Mule project using a design-first approach with a clean RAML structure and verified infrastructure, ensuring smooth implementation in later phases.”
+
+---
+
+If you’re ready, reply with:
+
+👉 **“Proceed to Phase 1 – Hello World RAML using APIKit”**
+
+Next, we’ll:
+
+* Write your **first RAML**
+* Generate flows
+* Hit the API
+* Build confidence step by step
+Perfect 👍
+That clarification is important. Let’s **lock Phase 0 properly** with these two constraints:
+
+* ✅ **RAML will be created and maintained in Anypoint Studio (not Exchange first)**
+* ✅ **Project name = `employee-api-new`**
+
+I’ll restate **Phase 0 cleanly**, aligned exactly to *your setup*, and then we’ll move forward without rework.
+
+---
+
+# 🟢 PHASE 0 – Environment & Project Setup
+
+**(Updated for: RAML in Studio + project name `employee-api-new`)**
+
+---
+
+## 🎯 Goal of Phase 0 (Very clear)
+
+By the end of Phase 0, you should have:
+
+* A **working Mule project** named `employee-api-new`
+* A **local RAML file** that will evolve phase by phase
+* A **ready MySQL database**
+* A **clean folder structure for RAML fragments**
+
+No business logic yet. No TLS yet.
+
+---
+
+## 0.1 – Confirm Tools (Quick check)
+
+### ✅ Anypoint Studio
+
+* Studio 7.x
+* Mule Runtime 4.x
+
+👉 This is fine if you already reached the “Run” stage earlier.
+
+---
+
+### ✅ MySQL (already discussed, quick recap)
+
+Database:
+
+```sql
+CREATE DATABASE IF NOT EXISTS employee_db;
+USE employee_db;
+```
+
+Table:
+
+```sql
+CREATE TABLE employee (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100),
+    email VARCHAR(100),
+    department VARCHAR(50),
+    salary DECIMAL(10,2)
+);
+```
+
+👉 Stop here if DB fails.
+
+---
+
+## 0.2 – Create Mule Project (Design-First, RAML in Studio)
+
+### ✅ Step-by-step (IMPORTANT)
+
+1. Open **Anypoint Studio**
+
+2. Go to:
+
+   ```
+   File → New → Mule Project
+   ```
+
+3. Fill details:
+
+   * **Project Name:** `employee-api-new`
+   * **Runtime:** Mule 4.x
+   * ✅ Check **Add APIKit components**
+   * API Definition:
+
+     * Select **New RAML file**
+     * File name: `employee-api.raml`
+     * Location: `src/main/resources/api`
+
+4. Click **Finish**
+
+---
+
+### ✅ What Studio creates for you
+
+* APIKit router
+* A default main flow
+* RAML file linked to the router
+
+This is **exactly what we want**.
+
+---
+
+## 0.3 – Verify Project Structure (Don’t skip)
+
+Your workspace should now look like:
+
+```
+employee-api-new
+ └── src
+     └── main
+         ├── mule
+         │   └── employee-api-new.xml
+         └── resources
+             └── api
+                 └── employee-api.raml
+```
+
+If:
+
+* RAML is missing ❌
+* APIKit router is missing ❌
+  → stop and recreate project properly.
+
+---
+
+## 0.4 – Create RAML Fragment Folder Structure (Now, not later)
+
+Since **all fragment types must exist in this project**, create them **now**.
+
+Inside:
+
+```
+src/main/resources/api/
+```
+
+Create folders:
+
+```
+api/
+ ├── employee-api.raml
+ ├── datatypes/
+ ├── traits/
+ ├── resourceTypes/
+ ├── examples/
+ ├── libraries/
+ └── security/
+```
+
+### ❓ Why now?
+
+Because:
+
+* Later RAML will reference these paths
+* Avoids broken includes
+* Keeps design clean from day one
+
+---
+
+## 0.5 – Decide Local API URL (Fix it early)
+
+For this project:
+
+* Protocol (for now): `HTTP`
+* Port: `8081`
+* Base path (later): `/employees`
+
+Final API (later):
+
+```
+http://localhost:8081/employees
+```
+
+TLS will come **much later**, not now.
+
+---
+
+## 0.6 – What We Are NOT Doing Yet ❌
+
+Just to be very clear:
+
+* ❌ No CRUD logic
+* ❌ No DB connector in Mule
+* ❌ No TLS / certificates
+* ❌ No Exchange publish
+* ❌ No RAML fragments written yet
+
+Phase 0 = **only setup & structure**
+
+---
+
+## ✅ Phase 0 Completion Checklist (Must be ALL ✔)
+
+Confirm before moving on:
+
+✔ Project name is `employee-api-new`
+✔ RAML file exists in Studio
+✔ APIKit router is present
+✔ DB and table exist
+✔ Fragment folders created
+✔ Project runs without errors
+
+If **any item is ❌**, tell me exactly which one.
+
+---
+
+## 🧠 Mentor-style summary (remember this line)
+
+> “Phase 0 prepares the Mule project using a design-first approach with a clean RAML structure and verified infrastructure, ensuring smooth implementation in later phases.”
+
+---
+
+If you’re ready, reply with:
+
+👉 **“Proceed to Phase 1 – Hello World RAML using APIKit”**
+
+Next, we’ll:
+
+* Write your **first RAML**
+* Generate flows
+* Hit the API
+* Build confidence step by step
