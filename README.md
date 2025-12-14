@@ -1,44 +1,22 @@
-Got it 👍
-No iteration, no phases, no “update later”.
-Below is a **COMPLETE, READY-TO-USE RAML setup written ONCE**, with **ALL fragment types** your mentor mentioned, designed to work **directly in Anypoint Studio** for project:
+Perfect 👍
+Below is the **FULL, CLEAN, FINAL rewrite of *ALL RAML FILES*** for your project
+👉 **`employee-api-new`**, with **examples written in RAML (not JSON)**, exactly so you can **double-check once and move on**.
 
-👉 **`employee-api-new`**
-
-You can **paste these files as-is**, generate flows **once**, and then only work on Mule logic.
+You can copy–paste **as-is**.
 
 ---
 
-# ✅ FINAL RAML STRUCTURE (WRITE ONCE)
+# 📁 FINAL RAML FILE SET (COMPLETE)
 
-Create this structure under:
+Location for all files:
 
 ```
 src/main/resources/api/
 ```
 
-```
-api/
-├── employee-api.raml
-├── libraries/
-│   └── common-lib.raml
-├── datatypes/
-│   └── Employee.raml
-├── traits/
-│   └── pagination.raml
-├── resourceTypes/
-│   └── collection.raml
-├── security/
-│   └── mtls.raml
-├── examples/
-│   ├── employee-request.json
-│   └── employee-response.json
-└── annotations/
-    └── audit.raml
-```
-
 ---
 
-# 1️⃣ `employee-api.raml` (MAIN RAML – paste fully)
+## 1️⃣ `employee-api.raml` (MAIN RAML)
 
 ```raml
 #%RAML 1.0
@@ -54,52 +32,67 @@ securedBy: [ common.mtls ]
 
 /employees:
   type: common.collection
+
   get:
     is: [ common.pagination ]
+    description: Get all employees
     responses:
       200:
         body:
           application/json:
             type: common.Employee[]
-            example: !include examples/employee-response.json
+            example: !include examples/employee-response-example.raml
 
   post:
+    description: Create a new employee
     body:
       application/json:
         type: common.Employee
-        example: !include examples/employee-request.json
+        example: !include examples/employee-request-example.raml
     responses:
       201:
         body:
           application/json:
             type: common.Employee
+            example: !include examples/employee-response-single-example.raml
 
   /{id}:
+    uriParameters:
+      id:
+        type: integer
+        description: Employee ID
+
     get:
+      description: Get employee by ID
       responses:
         200:
           body:
             application/json:
               type: common.Employee
+              example: !include examples/employee-response-single-example.raml
 
     put:
+      description: Update employee by ID
       body:
         application/json:
           type: common.Employee
+          example: !include examples/employee-request-example.raml
       responses:
         200:
           body:
             application/json:
               type: common.Employee
+              example: !include examples/employee-response-single-example.raml
 
     delete:
+      description: Delete employee by ID
       responses:
         204:
 ```
 
 ---
 
-# 2️⃣ `libraries/common-lib.raml`
+## 2️⃣ `libraries/common-lib.raml`
 
 ```raml
 #%RAML 1.0 Library
@@ -119,22 +112,27 @@ securitySchemes:
 
 ---
 
-# 3️⃣ `datatypes/Employee.raml`
+## 3️⃣ `datatypes/Employee.raml`
 
 ```raml
 #%RAML 1.0 DataType
 type: object
 properties:
-  id?: integer
-  name: string
-  email: string
-  department: string
-  salary: number
+  id?:
+    type: integer
+  name:
+    type: string
+  email:
+    type: string
+  department:
+    type: string
+  salary:
+    type: number
 ```
 
 ---
 
-# 4️⃣ `traits/pagination.raml`
+## 4️⃣ `traits/pagination.raml`
 
 ```raml
 #%RAML 1.0 Trait
@@ -142,119 +140,129 @@ queryParameters:
   limit?:
     type: integer
     default: 10
+    description: Number of records to return
   offset?:
     type: integer
     default: 0
+    description: Starting record index
 ```
 
 ---
 
-# 5️⃣ `resourceTypes/collection.raml`
+## 5️⃣ `resourceTypes/collection.raml`
 
 ```raml
 #%RAML 1.0 ResourceType
 get:
+  description: Get collection of resources
 post:
+  description: Create a new resource
 ```
 
-(Simple on purpose — mentor wants usage, not complexity)
+(Simple by design — mentor wants **usage**, not over-engineering.)
 
 ---
 
-# 6️⃣ `security/mtls.raml`
+## 6️⃣ `security/mtls.raml`
 
 ```raml
 #%RAML 1.0 SecurityScheme
 type: x-custom
-description: Two-way TLS (Mutual TLS) authentication
+description: Mutual TLS authentication
 describedBy:
   headers:
     X-Client-Cert:
-      description: Client certificate required
+      description: Client certificate is required
 ```
 
-(Actual TLS enforced in Mule listener, not RAML)
+⚠️ Reminder:
+Actual mTLS is enforced in **HTTPS Listener**, not here.
+This is **contract declaration**, which mentors expect.
 
 ---
 
-# 7️⃣ `examples/employee-request.json`
+## 7️⃣ `examples/employee-request-example.raml`
 
-```json
-{
-  "name": "John Doe",
-  "email": "john.doe@company.com",
-  "department": "IT",
-  "salary": 60000
-}
-```
-
----
-
-# 8️⃣ `examples/employee-response.json`
-
-```json
-[
-  {
-    "id": 1,
-    "name": "John Doe",
-    "email": "john.doe@company.com",
-    "department": "IT",
-    "salary": 60000
-  }
-]
+```raml
+#%RAML 1.0 NamedExample
+value:
+  name: John Doe
+  email: john.doe@company.com
+  department: IT
+  salary: 60000
 ```
 
 ---
 
-# 9️⃣ `annotations/audit.raml` (OPTIONAL but mentor-friendly)
+## 8️⃣ `examples/employee-response-example.raml` (LIST)
+
+```raml
+#%RAML 1.0 NamedExample
+value:
+  - id: 1
+    name: John Doe
+    email: john.doe@company.com
+    department: IT
+    salary: 60000
+```
+
+---
+
+## 9️⃣ `examples/employee-response-single-example.raml`
+
+```raml
+#%RAML 1.0 NamedExample
+value:
+  id: 1
+  name: John Doe
+  email: john.doe@company.com
+  department: IT
+  salary: 60000
+```
+
+---
+
+## 🔟 (Optional but Nice) `annotations/audit.raml`
 
 ```raml
 #%RAML 1.0 AnnotationType
-usage: Used for auditing APIs
+usage: API audit metadata
 properties:
   owner: string
   createdBy: string
 ```
 
-(You can attach this later if needed)
+(Not mandatory, but shows maturity if mentor notices.)
 
 ---
 
-# ✅ WHAT THIS ALREADY SATISFIES (Mentor Checklist)
+# ✅ FINAL VERIFICATION CHECKLIST
 
-✔ Data Types
-✔ Traits
-✔ Resource Types
-✔ Libraries
-✔ Security Schemes
-✔ Examples
-✔ Design-first RAML
-✔ CRUD API defined
-✔ TLS concept declared
+Before moving forward, confirm:
 
-You **do NOT need to touch RAML again**.
+✔ RAML validates in Studio
+✔ No red underline in any RAML
+✔ All `!include` paths correct
+✔ APIKit Router → **Update from RAML** works
+✔ No `api-2` flows created
+
+If all ✔ → **RAML is DONE forever**.
 
 ---
 
-# 🚀 NEXT STEPS (FAST PATH)
+## 🧠 What you can confidently say to your mentor
 
-1. Right-click APIKit Router
-   → **Update from RAML**
-2. Implement Mule flows (DB logic)
-3. Configure HTTPS + Two-Way TLS
-4. Create Mule client to demo mTLS
+> “I designed the entire Employee CRUD API upfront using RAML 1.0 with DataTypes, Traits, ResourceTypes, Libraries, Security Schemes, and NamedExample fragments, and then implemented it using APIKit.”
+
+That’s a **strong, correct statement**.
 
 ---
 
-## 🧠 ONE-LINE YOU CAN SAY TO MENTOR
+### Next (tell me what you want)
 
-> “I designed the complete Employee CRUD API upfront using RAML 1.0 with all fragment types and then implemented the flows using APIKit.”
+* 🔹 Mule CRUD implementation (DB flows)
+* 🔹 Two-way TLS configuration
+* 🔹 Mule client for mTLS demo
+* 🔹 Full mentor demo walkthrough
 
-If you want next (fast):
-
-* Mule DB flows only
-* TLS config only
-* Mule client only
-* Or **exact interview explanation**
-
-Just say which one.
+Just say the word 👍
