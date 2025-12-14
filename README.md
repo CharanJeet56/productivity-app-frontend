@@ -1,268 +1,210 @@
-Perfect 👍
-Below is the **FULL, CLEAN, FINAL rewrite of *ALL RAML FILES*** for your project
-👉 **`employee-api-new`**, with **examples written in RAML (not JSON)**, exactly so you can **double-check once and move on**.
-
-You can copy–paste **as-is**.
-
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+    <http:listener-config name="employee-api-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="employee-api-config" api="resource::9d1ade30-ec6e-4c77-9c3a-b52d71203a73:new-employee-api:1.0.0:raml:zip:employee-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <db:config name="Database_Config" doc:name="Database Config" doc:id="6958d731-4506-4aab-a07b-5064fba1e3f6" >
+		<db:my-sql-connection host="${db.host}" port="${db.port}" user="${db.user}" password="${db.password}" database="${db.database}" />
+	</db:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="d72ee94d-16ff-4350-bcfe-6856c63886f3" file="config.yaml" />
+	<flow name="employee-api-main">
+        <http:listener config-ref="employee-api-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="employee-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
 ---
-
-# 📁 FINAL RAML FILE SET (COMPLETE)
-
-Location for all files:
-
-```
-src/main/resources/api/
-```
-
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
 ---
-
-## 1️⃣ `employee-api.raml` (MAIN RAML)
-
-```raml
-#%RAML 1.0
-title: Employee API
-version: v1
-protocols: [ HTTPS ]
-baseUri: https://localhost:8081
-
-uses:
-  common: libraries/common-lib.raml
-
-securedBy: [ common.mtls ]
-
-/employees:
-  type: common.collection
-
-  get:
-    is: [ common.pagination ]
-    description: Get all employees
-    responses:
-      200:
-        body:
-          application/json:
-            type: common.Employee[]
-            example: !include examples/employee-response-example.raml
-
-  post:
-    description: Create a new employee
-    body:
-      application/json:
-        type: common.Employee
-        example: !include examples/employee-request-example.raml
-    responses:
-      201:
-        body:
-          application/json:
-            type: common.Employee
-            example: !include examples/employee-response-single-example.raml
-
-  /{id}:
-    uriParameters:
-      id:
-        type: integer
-        description: Employee ID
-
-    get:
-      description: Get employee by ID
-      responses:
-        200:
-          body:
-            application/json:
-              type: common.Employee
-              example: !include examples/employee-response-single-example.raml
-
-    put:
-      description: Update employee by ID
-      body:
-        application/json:
-          type: common.Employee
-          example: !include examples/employee-request-example.raml
-      responses:
-        200:
-          body:
-            application/json:
-              type: common.Employee
-              example: !include examples/employee-response-single-example.raml
-
-    delete:
-      description: Delete employee by ID
-      responses:
-        204:
-```
-
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
 ---
-
-## 2️⃣ `libraries/common-lib.raml`
-
-```raml
-#%RAML 1.0 Library
-
-types:
-  Employee: !include ../datatypes/Employee.raml
-
-traits:
-  pagination: !include ../traits/pagination.raml
-
-resourceTypes:
-  collection: !include ../resourceTypes/collection.raml
-
-securitySchemes:
-  mtls: !include ../security/mtls.raml
-```
-
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
 ---
-
-## 3️⃣ `datatypes/Employee.raml`
-
-```raml
-#%RAML 1.0 DataType
-type: object
-properties:
-  id?:
-    type: integer
-  name:
-    type: string
-  email:
-    type: string
-  department:
-    type: string
-  salary:
-    type: number
-```
-
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
 ---
-
-## 4️⃣ `traits/pagination.raml`
-
-```raml
-#%RAML 1.0 Trait
-queryParameters:
-  limit?:
-    type: integer
-    default: 10
-    description: Number of records to return
-  offset?:
-    type: integer
-    default: 0
-    description: Starting record index
-```
-
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
 ---
-
-## 5️⃣ `resourceTypes/collection.raml`
-
-```raml
-#%RAML 1.0 ResourceType
-get:
-  description: Get collection of resources
-post:
-  description: Create a new resource
-```
-
-(Simple by design — mentor wants **usage**, not over-engineering.)
-
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="employee-api-console">
+        <http:listener config-ref="employee-api-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="employee-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
 ---
-
-## 6️⃣ `security/mtls.raml`
-
-```raml
-#%RAML 1.0 SecurityScheme
-type: x-custom
-description: Mutual TLS authentication
-describedBy:
-  headers:
-    X-Client-Cert:
-      description: Client certificate is required
-```
-
-⚠️ Reminder:
-Actual mTLS is enforced in **HTTPS Listener**, not here.
-This is **contract declaration**, which mentors expect.
-
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="put:\employees\(id):application\json:employee-api-config">
+        <ee:transform doc:name="Transform Message">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
 ---
-
-## 7️⃣ `examples/employee-request-example.raml`
-
-```raml
-#%RAML 1.0 NamedExample
-value:
-  name: John Doe
-  email: john.doe@company.com
-  department: IT
+{
+  id: 1,
+  name: "John Doe",
+  email: "john.doe@company.com",
+  department: "IT",
   salary: 60000
-```
-
+} as Object {encoding: "UTF-8", mediaType: "application/json"}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="delete:\employees\(id):employee-api-config">
+        <ee:transform doc:name="Transform Message">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="delete:\employees\(id):employee-api-config" />
+    </flow>
+    <flow name="get:\employees:employee-api-config">
+		<db:select doc:name="Select" doc:id="a59ecb4d-b2f1-4fd6-934d-b8e9d7e8d51c" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM employees;]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="3b39af33-845b-4cda-bcb2-543f50661639" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
 ---
-
-## 8️⃣ `examples/employee-response-example.raml` (LIST)
-
-```raml
-#%RAML 1.0 NamedExample
-value:
-  - id: 1
-    name: John Doe
-    email: john.doe@company.com
-    department: IT
-    salary: 60000
-```
-
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+    </flow>
+    <flow name="get:\employees\(id):employee-api-config">
+        <ee:transform doc:name="Transform Message">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
 ---
-
-## 9️⃣ `examples/employee-response-single-example.raml`
-
-```raml
-#%RAML 1.0 NamedExample
-value:
-  id: 1
-  name: John Doe
-  email: john.doe@company.com
-  department: IT
+{
+  id: 1,
+  name: "John Doe",
+  email: "john.doe@company.com",
+  department: "IT",
   salary: 60000
-```
-
+} as Object {encoding: "UTF-8", mediaType: "application/json"}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="post:\employees:application\json:employee-api-config">
+        <ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
 ---
-
-## 🔟 (Optional but Nice) `annotations/audit.raml`
-
-```raml
-#%RAML 1.0 AnnotationType
-usage: API audit metadata
-properties:
-  owner: string
-  createdBy: string
-```
-
-(Not mandatory, but shows maturity if mentor notices.)
-
----
-
-# ✅ FINAL VERIFICATION CHECKLIST
-
-Before moving forward, confirm:
-
-✔ RAML validates in Studio
-✔ No red underline in any RAML
-✔ All `!include` paths correct
-✔ APIKit Router → **Update from RAML** works
-✔ No `api-2` flows created
-
-If all ✔ → **RAML is DONE forever**.
-
----
-
-## 🧠 What you can confidently say to your mentor
-
-> “I designed the entire Employee CRUD API upfront using RAML 1.0 with DataTypes, Traits, ResourceTypes, Libraries, Security Schemes, and NamedExample fragments, and then implemented it using APIKit.”
-
-That’s a **strong, correct statement**.
-
----
-
-### Next (tell me what you want)
-
-* 🔹 Mule CRUD implementation (DB flows)
-* 🔹 Two-way TLS configuration
-* 🔹 Mule client for mTLS demo
-* 🔹 Full mentor demo walkthrough
-
-Just say the word 👍
+{
+  id: 1,
+  name: "John Doe",
+  email: "john.doe@company.com",
+  department: "IT",
+  salary: 60000
+} as Object {encoding: "UTF-8", mediaType: "application/json"}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+</mule>
