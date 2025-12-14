@@ -1,147 +1,306 @@
-<?xml version="1.0" encoding="UTF-8"?>
+Perfect 👍
+Below is a **complete, clean, mentor-ready RAML implementation** for **Employee CRUD API** using **ALL major RAML 1.0 fragments**:
 
-<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
-      xmlns:http="http://www.mulesoft.org/schema/mule/http"
-      xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
-      xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-      xmlns="http://www.mulesoft.org/schema/mule/core"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="
-      http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-      http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
-      http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd
-      http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
-      http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+* DataTypes
+* Traits
+* ResourceTypes
+* Libraries
+* Security Schemes
+* Examples
 
-    <!-- ================= HTTP CONFIG ================= -->
-    <http:listener-config name="httpListener">
-        <http:listener-connection host="0.0.0.0" port="8081"/>
-    </http:listener-config>
+All written **fully in RAML (not JSON files)** as you asked.
 
-    <!-- ================= CONFIG YAML ================= -->
-    <configuration-properties file="config.yaml"/>
+Project name:
 
-    <!-- ================= DB CONFIG ================= -->
-    <db:config name="dbConfig">
-        <db:my-sql-connection
-                host="${db.host}"
-                port="${db.port}"
-                user="${db.user}"
-                password="${db.password}"
-                database="${db.database}"/>
-    </db:config>
+```
+employee-api-new
+```
 
-    <!-- ================= APIKIT CONFIG ================= -->
-    <apikit:config name="employee-api-config"
-                   api="resource::employee-api-new:employee-api-new:1.0.0:raml:zip:employee-api.raml"
-                   outboundHeadersMapName="outboundHeaders"
-                   httpStatusVarName="httpStatus"/>
+---
 
-    <!-- ================= MAIN FLOW ================= -->
-    <flow name="employee-api-main">
-        <http:listener config-ref="httpListener" path="/api/*"/>
+# 📁 Folder Structure (IMPORTANT)
 
-        <apikit:router config-ref="employee-api-config"/>
+```
+src/main/resources/api/
+│
+├── employee-api.raml                (ROOT)
+│
+├── libraries/
+│   └── common-library.raml
+│
+├── datatypes/
+│   └── employee-dt.raml
+│
+├── traits/
+│   └── common-traits.raml
+│
+├── resourceTypes/
+│   └── collection-resource.raml
+│
+├── security/
+│   └── mtls-security.raml
+│
+└── examples/
+    ├── employee-request-example.raml
+    ├── employee-response-example.raml
+    └── employee-list-response-example.raml
+```
 
-        <error-handler>
+---
 
-            <on-error-propagate type="APIKIT:BAD_REQUEST">
-                <set-variable variableName="httpStatus" value="400"/>
-                <set-payload value='{"message":"Bad Request"}' mimeType="application/json"/>
-            </on-error-propagate>
+# 1️⃣ ROOT FILE — `employee-api.raml`
 
-            <on-error-propagate type="APIKIT:NOT_FOUND">
-                <set-variable variableName="httpStatus" value="404"/>
-                <set-payload value='{"message":"Resource Not Found"}' mimeType="application/json"/>
-            </on-error-propagate>
+```raml
+#%RAML 1.0
+title: Employee API
+version: v1
+baseUri: /api
+mediaType: application/json
 
-            <on-error-propagate type="MULE:NOT_FOUND">
-                <set-variable variableName="httpStatus" value="404"/>
-                <set-payload value='{"message":"Employee Not Found"}' mimeType="application/json"/>
-            </on-error-propagate>
+uses:
+  common: libraries/common-library.raml
 
-            <on-error-propagate>
-                <set-variable variableName="httpStatus" value="500"/>
-                <set-payload value='{"message":"Internal Server Error"}' mimeType="application/json"/>
-            </on-error-propagate>
+securedBy:
+  - common.mTLS
 
-        </error-handler>
-    </flow>
+/employees:
+  type: common.collectionResource
+  get:
+    description: Get all employees
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include examples/employee-list-response-example.raml
 
-    <!-- ================= GET ALL EMPLOYEES ================= -->
-    <flow name="get:\employees:employee-api-config">
-        <db:select config-ref="dbConfig">
-            <db:sql>SELECT * FROM employees</db:sql>
-        </db:select>
-    </flow>
+  post:
+    description: Create new employee
+    body:
+      application/json:
+        example: !include examples/employee-request-example.raml
+    responses:
+      201:
+        body:
+          application/json:
+            example:
+              message: Employee Created
 
-    <!-- ================= GET EMPLOYEE BY ID ================= -->
-    <flow name="get:\employees\(id):employee-api-config">
-        <set-variable variableName="id" value="#[attributes.uriParams.id]"/>
+/employees/{id}:
+  type: common.collectionResource
+  uriParameters:
+    id:
+      type: integer
+      required: true
 
-        <db:select config-ref="dbConfig">
-            <db:sql>SELECT * FROM employees WHERE id = :id</db:sql>
-            <db:input-parameters>
-                #[{ id: vars.id }]
-            </db:input-parameters>
-        </db:select>
+  get:
+    description: Get employee by ID
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include examples/employee-response-example.raml
 
-        <choice>
-            <when expression="#[isEmpty(payload)]">
-                <raise-error type="MULE:NOT_FOUND"/>
-            </when>
-        </choice>
-    </flow>
+  put:
+    description: Update employee
+    body:
+      application/json:
+        example: !include examples/employee-request-example.raml
+    responses:
+      200:
+        body:
+          application/json:
+            example:
+              message: Employee Updated
 
-    <!-- ================= CREATE EMPLOYEE ================= -->
-    <flow name="post:\employees:application\json:employee-api-config">
-        <db:insert config-ref="dbConfig">
-            <db:sql>
-                INSERT INTO employees (name,email,department,salary)
-                VALUES (:name,:email,:department,:salary)
-            </db:sql>
-        </db:insert>
+  delete:
+    description: Delete employee
+    responses:
+      200:
+        body:
+          application/json:
+            example:
+              message: Employee Deleted
+```
 
-        <set-variable variableName="httpStatus" value="201"/>
-        <set-payload value='{"message":"Employee Created"}' mimeType="application/json"/>
-    </flow>
+---
 
-    <!-- ================= UPDATE EMPLOYEE ================= -->
-    <flow name="put:\employees\(id):application\json:employee-api-config">
-        <set-variable variableName="id" value="#[attributes.uriParams.id]"/>
+# 2️⃣ LIBRARY — `libraries/common-library.raml`
 
-        <db:update config-ref="dbConfig">
-            <db:sql>
-                UPDATE employees
-                SET name=:name,email=:email,department=:department,salary=:salary
-                WHERE id=:id
-            </db:sql>
-        </db:update>
+```raml
+#%RAML 1.0 Library
 
-        <choice>
-            <when expression="#[payload == 0]">
-                <raise-error type="MULE:NOT_FOUND"/>
-            </when>
-        </choice>
+types:
+  Employee: !include ../datatypes/employee-dt.raml
 
-        <set-payload value='{"message":"Employee Updated"}' mimeType="application/json"/>
-    </flow>
+traits:
+  commonHeaders: !include ../traits/common-traits.raml
 
-    <!-- ================= DELETE EMPLOYEE ================= -->
-    <flow name="delete:\employees\(id):employee-api-config">
-        <set-variable variableName="id" value="#[attributes.uriParams.id]"/>
+resourceTypes:
+  collectionResource: !include ../resourceTypes/collection-resource.raml
 
-        <db:delete config-ref="dbConfig">
-            <db:sql>DELETE FROM employees WHERE id = :id</db:sql>
-        </db:delete>
+securitySchemes:
+  mTLS: !include ../security/mtls-security.raml
+```
 
-        <choice>
-            <when expression="#[payload == 0]">
-                <raise-error type="MULE:NOT_FOUND"/>
-            </when>
-        </choice>
+---
 
-        <set-payload value='{"message":"Employee Deleted"}' mimeType="application/json"/>
-    </flow>
+# 3️⃣ DATA TYPE — `datatypes/employee-dt.raml`
 
-</mule>
+```raml
+#%RAML 1.0 DataType
+type: object
+properties:
+  id?:
+    type: integer
+  name:
+    type: string
+  email:
+    type: string
+  department:
+    type: string
+  salary:
+    type: number
+```
+
+---
+
+# 4️⃣ TRAITS — `traits/common-traits.raml`
+
+```raml
+#%RAML 1.0 Trait
+headers:
+  Content-Type:
+    required: true
+    example: application/json
+responses:
+  400:
+    body:
+      application/json:
+        example:
+          message: Bad Request
+  404:
+    body:
+      application/json:
+        example:
+          message: Resource Not Found
+  500:
+    body:
+      application/json:
+        example:
+          message: Internal Server Error
+```
+
+---
+
+# 5️⃣ RESOURCE TYPE — `resourceTypes/collection-resource.raml`
+
+```raml
+#%RAML 1.0 ResourceType
+usage: Apply common behavior to collection endpoints
+
+get?:
+  is: [ commonHeaders ]
+
+post?:
+  is: [ commonHeaders ]
+
+put?:
+  is: [ commonHeaders ]
+
+delete?:
+  is: [ commonHeaders ]
+```
+
+---
+
+# 6️⃣ SECURITY SCHEME — `security/mtls-security.raml`
+
+```raml
+#%RAML 1.0 SecurityScheme
+type: x-client-cert
+description: Mutual TLS authentication using client certificate
+```
+
+---
+
+# 7️⃣ EXAMPLES — REQUEST
+
+## `examples/employee-request-example.raml`
+
+```raml
+{
+  "name": "John Doe",
+  "email": "john.doe@company.com",
+  "department": "IT",
+  "salary": 60000
+}
+```
+
+---
+
+# 8️⃣ EXAMPLES — SINGLE RESPONSE
+
+## `examples/employee-response-example.raml`
+
+```raml
+{
+  "id": 1,
+  "name": "John Doe",
+  "email": "john.doe@company.com",
+  "department": "IT",
+  "salary": 60000
+}
+```
+
+---
+
+# 9️⃣ EXAMPLES — LIST RESPONSE
+
+## `examples/employee-list-response-example.raml`
+
+```raml
+[
+  {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john.doe@company.com",
+    "department": "IT",
+    "salary": 60000
+  },
+  {
+    "id": 2,
+    "name": "Alice",
+    "email": "alice@company.com",
+    "department": "HR",
+    "salary": 50000
+  }
+]
+```
+
+---
+
+# ✅ WHAT YOU HAVE ACHIEVED (MENTOR POINTS)
+
+✔ RAML root
+✔ DataTypes
+✔ Traits
+✔ ResourceTypes
+✔ Libraries
+✔ SecuritySchemes (mTLS)
+✔ Examples
+✔ Clean folder structure
+✔ Enterprise-style API design
+
+This is **exactly how real MuleSoft projects are structured**.
+
+---
+
+## 🔜 NEXT (tell me what you want)
+
+1️⃣ APIKit → Studio flow mapping
+2️⃣ 2-Way TLS keystore & truststore commands
+3️⃣ Postman + mTLS testing
+4️⃣ Interview explanation (why each fragment exists)
+5️⃣ MUnit tests
+
+Just say **next** and the number 🚀
