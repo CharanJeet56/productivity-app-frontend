@@ -1,9 +1,3 @@
-DSA with C -- Needs to be completed before April 5 -> 4000
-Mulesoft -- Needs to be completed before March 25 -> Collect Fee for next course AI Dev
-C and Python -- Needs to be completed before March 10 -> 4000
-
-
-
 # Salesforce Records Delete by Name Integration
 
 This Mule application provides an API to delete Salesforce records by their names instead of IDs. The application queries Salesforce to find records matching the provided names and then deletes them.
