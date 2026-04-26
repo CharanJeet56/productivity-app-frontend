@@ -1,64 +1,58 @@
-Alright — cleaned this one up properly too. This is actually a very interesting DP partition problem (not obvious at first glance 👀). Here’s the full structured version 👇
+Alright — this one needed a bit more reconstruction, but I’ve cleaned it up into a proper interview-ready problem statement + cases + code 👇
 
 ⸻
 
-🧠 Problem: Minimum Cost Partition into K Blocks
+🧠 Problem: Maximum Packets with Budget & No Adjacent Selection
 
-You are given an array:
+A research facility is processing a sequence of N data packets arranged in a row.
 
-a[1...N]
+Each packet i (1 ≤ i ≤ N) has an associated labeling cost:
 
-containing positive integers.
+a[i]
+
+⸻
+
+⚠️ Restriction
+
+Due to hardware interference:
+
+👉 If you choose to label packet i, you cannot label its adjacent packets:
+
+* i - 1
+* i + 1 (if they exist)
+
+⸻
+
+🎒 Budget Constraint
+
+You are given a total budget B.
+
+You must select a subset of packets such that:
+
+1. 🚫 No two selected packets are adjacent
+2. 💰 Total cost ≤ B
 
 ⸻
 
 🎯 Objective
 
-Partition the array into exactly K contiguous blocks.
-
-Each block is of the form:
-
-a[l...r]
-
-⸻
-
-💰 Cost Function
-
-Let:
-
-len = r - l + 1
-
-Then cost of a block is:
-
-* 🔹 If len is odd
-
-cost = len × max(a[l...r])
-
-* 🔹 If len is even
-
-cost = len × min(a[l...r])
-
-⸻
-
-🎯 Goal
-
-👉 Minimize the total cost across all K blocks.
+👉 Maximize the number of packets selected (labeled)
 
 ⸻
 
 📥 Input Format
 
-1. First line: Integer n — size of array
-2. Second line: Integer k — number of blocks
-3. Third line: n integers → array a
+1. First line: Integer N — number of packets
+2. Second line: Integer B — total budget
+3. Third line: N integers → array a
 
 ⸻
 
 📌 Constraints
 
-* 1 ≤ n ≤ 500
-* 1 ≤ k ≤ 500
-* 1 ≤ a[i] ≤ 10^4
+* 1 ≤ N ≤ 5000
+* 0 ≤ B ≤ 10^9
+* 0 ≤ a[i] ≤ 10^4
 
 ⸻
 
@@ -70,24 +64,19 @@ cost = len × min(a[l...r])
 
 Input
 
-4
-2
-5 2 8 3
+3
+10
+5 1 5
 
 Output
 
-10
+2
 
 Explanation
 
-Optimal split:
-
-[5,2] | [8,3]
-
-* [5,2] → length = 2 (even) → 2 × min(5,2) = 4
-* [8,3] → length = 2 (even) → 2 × min(8,3) = 6
-
-Total = 4 + 6 = 10
+* Choose packets at indices 1 and 3
+* Cost = 5 + 5 = 10 ≤ B
+* Count = 2 (maximum)
 
 ⸻
 
@@ -96,50 +85,41 @@ Total = 4 + 6 = 10
 Input
 
 5
-3
-1 10 1 10 1
+10
+5 1 10 1 5
 
 Output
 
-5
+2
 
 Explanation
 
-Optimal split:
+* Possible picks:
+    * [1,5] → cost = 5+5 = 10 → count = 2
+    * [2,4] → cost = 1+1 = 2 → count = 2
+* Cannot pick 3 elements without exceeding budget or violating adjacency
 
-[1] | [10,1] | [10,1]
-
-* [1] → odd → 1 × max(1) = 1
-* [10,1] → even → 2 × min(10,1) = 2
-* [10,1] → even → 2 × min(10,1) = 2
-
-Total = 1 + 2 + 2 = 5
+👉 Max = 2
 
 ⸻
 
-✅ Case 3
+✅ Case 3 (from screen logic)
 
 Input
 
-6
-3
-3 1 4 1 5 9
+5
+30
+5 10 20 25 45
 
 Output
 
-8
+2
 
 Explanation
 
-Optimal split:
-
-[3] | [1] | [4,1,5,9]
-
-* [3] → odd → 1 × 3 = 3
-* [1] → odd → 1 × 1 = 1
-* [4,1,5,9] → even → 4 × min(4,1,5,9) = 4
-
-Total = 3 + 1 + 4 = 8
+* Choose indices 1 and 3 → cost = 5 + 20 = 25 ≤ 30
+* Other combinations exceed budget or violate adjacency
+    👉 Answer = 2
 
 ⸻
 
@@ -147,43 +127,47 @@ Total = 3 + 1 + 4 = 8
 
 import sys
 input = sys.stdin.readline
-def solve(n: int, k: int, a: list) -> int:
+def solve(n: int, b: int, a: list) -> int:
     # Write your solution here
-    pass
+    return 0
 if __name__ == "__main__":
     try:
         n = int(input().strip())
-        k = int(input().strip())
+        b = int(input().strip())
         a = list(map(int, input().split()))
-        result = solve(n, k, a)
+        result = solve(n, b, a)
         print(result)
     except (EOFError, ValueError):
         pass
 
 ⸻
 
-⚠️ Important Observations (Interview Gold 💡)
+🧠 Key Insight (Don’t ignore this 👇)
 
-* This is DP + partition problem
-* Classic structure:
+This is NOT just greedy.
 
-dp[i][j] = min cost to partition first i elements into j blocks
+It’s a mix of:
 
-* Transition:
+* 🧩 House Robber (non-adjacent constraint)
+* 🎒 Knapsack (budget constraint)
+* 🎯 Goal = maximize count, not value
 
-try all possible last block endings
+⸻
 
-* Precompute:
-    * min in range
-    * max in range
-        (or compute on the fly — n=500 allows O(n³) borderline)
+⚡ Real Interview Thinking
+
+* You’re maximizing count, not minimizing cost
+* So cheapest elements matter
+* But adjacency restricts choices → breaks simple sorting
+
+👉 This becomes a DP on index + budget + selection state
 
 ⸻
 
 If you want next step, I can:
 
-* 🚀 Give optimized DP (O(n²k))
-* 🧩 Show how to precompute min/max smartly
-* 🎯 Walk like interviewer (this one is tricky!)
+* 🔥 Give optimal solution (this one is tricky but elegant)
+* ⚡ Show greedy + DP hybrid
+* 🎯 Explain how interviewer expects you to approach
 
 Just say “solve it” 👍
