@@ -1,68 +1,64 @@
-Got it — I went through all your screenshots carefully and reconstructed the complete problem in a clean, interview-ready format 👇
+Alright — cleaned this one up properly too. This is actually a very interesting DP partition problem (not obvious at first glance 👀). Here’s the full structured version 👇
 
 ⸻
 
-🧠 Problem: Two-Layer Knapsack Optimization
+🧠 Problem: Minimum Cost Partition into K Blocks
 
-You are given N items, each available in two layers:
+You are given an array:
 
-🔹 Layer 1
+a[1...N]
 
-* Weight: w1[i]
-* Value: v1[i]
-
-🔹 Layer 2
-
-* Weight: w2[i]
-* Value: v2[i]
-
-⸻
-
-🎒 Bag Constraint
-
-You are given a bag with total capacity C.
-
-You must fill the bag in two phases:
-
-1. First Phase
-    Choose items from Layer 1
-    → Standard 0/1 Knapsack
-2. Second Phase
-    Choose items from Layer 2
-    → Using only the remaining capacity
-
-⸻
-
-⚠️ Important Constraint
-
-* Each item can be used at most once across both layers
-    (i.e., if you pick item i from Layer 1, you cannot pick it again from Layer 2)
+containing positive integers.
 
 ⸻
 
 🎯 Objective
 
-👉 Maximize the total value from both layers combined.
+Partition the array into exactly K contiguous blocks.
+
+Each block is of the form:
+
+a[l...r]
+
+⸻
+
+💰 Cost Function
+
+Let:
+
+len = r - l + 1
+
+Then cost of a block is:
+
+* 🔹 If len is odd
+
+cost = len × max(a[l...r])
+
+* 🔹 If len is even
+
+cost = len × min(a[l...r])
+
+⸻
+
+🎯 Goal
+
+👉 Minimize the total cost across all K blocks.
 
 ⸻
 
 📥 Input Format
 
-1. First line: Integer n — number of items
-2. Next line: n integers → w1[i] (weights of Layer 1)
-3. Next line: n integers → v1[i] (values of Layer 1)
-4. Next line: n integers → w2[i] (weights of Layer 2)
-5. Next line: n integers → v2[i] (values of Layer 2)
-6. Last line: Integer c — capacity of the bag
+1. First line: Integer n — size of array
+2. Second line: Integer k — number of blocks
+3. Third line: n integers → array a
 
 ⸻
 
 📌 Constraints
 
-* 1 ≤ n ≤ 100
-* 1 ≤ w1[i], w2[i] ≤ 50
-* 1 ≤ v1[i], v2[i] ≤ 500
-* 1 ≤ c ≤ 500
+* 1 ≤ n ≤ 500
+* 1 ≤ k ≤ 500
+* 1 ≤ a[i] ≤ 10^4
 
 ⸻
 
@@ -74,24 +70,24 @@ You must fill the bag in two phases:
 
 Input
 
-3
-4 5 6
-10 20 30
-3 4 5
-8 15 25
-10
+4
+2
+5 2 8 3
 
 Output
 
-45
+10
 
 Explanation
 
-* Pick item 1 from Layer 1 → weight = 5, value = 20
-* Pick item 2 from Layer 2 → weight = 5, value = 25
+Optimal split:
 
-Total weight = 10 ≤ C
-Total value = 45
+[5,2] | [8,3]
+
+* [5,2] → length = 2 (even) → 2 × min(5,2) = 4
+* [8,3] → length = 2 (even) → 2 × min(8,3) = 6
+
+Total = 4 + 6 = 10
 
 ⸻
 
@@ -99,21 +95,25 @@ Total value = 45
 
 Input
 
-2
-5 5
-100 100
-10 10
-200 200
-2
+5
+3
+1 10 1 10 1
 
 Output
 
-0
+5
 
 Explanation
 
-* All weights exceed capacity C = 2
-* Nothing can be selected → 0
+Optimal split:
+
+[1] | [10,1] | [10,1]
+
+* [1] → odd → 1 × max(1) = 1
+* [10,1] → even → 2 × min(10,1) = 2
+* [10,1] → even → 2 × min(10,1) = 2
+
+Total = 1 + 2 + 2 = 5
 
 ⸻
 
@@ -121,25 +121,25 @@ Explanation
 
 Input
 
-4
-3 4 5 2
-4 5 6 3
-6 3 2 8
-9 7 10 15
-15
+6
+3
+3 1 4 1 5 9
 
 Output
 
-32
+8
 
 Explanation
 
-* Pick item 1 from Layer 1 → weight = 3, value = 4
-* Pick item 2 from Layer 2 → weight = 2, value = 10
-* Pick item 3 from Layer 2 → weight = 8, value = 15
+Optimal split:
 
-Total weight = 13 ≤ 15
-Total value = 32
+[3] | [1] | [4,1,5,9]
+
+* [3] → odd → 1 × 3 = 3
+* [1] → odd → 1 × 1 = 1
+* [4,1,5,9] → even → 4 × min(4,1,5,9) = 4
+
+Total = 3 + 1 + 4 = 8
 
 ⸻
 
@@ -147,28 +147,43 @@ Total value = 32
 
 import sys
 input = sys.stdin.readline
-def solve(n: int, w1: list, v1: list, w2: list, v2: list, c: int) -> int:
+def solve(n: int, k: int, a: list) -> int:
     # Write your solution here
-    return 0
+    pass
 if __name__ == "__main__":
     try:
         n = int(input().strip())
-        w1 = list(map(int, input().split()))
-        v1 = list(map(int, input().split()))
-        w2 = list(map(int, input().split()))
-        v2 = list(map(int, input().split()))
-        c = int(input().strip())
-        result = solve(n, w1, v1, w2, v2, c)
+        k = int(input().strip())
+        a = list(map(int, input().split()))
+        result = solve(n, k, a)
         print(result)
     except (EOFError, ValueError):
         pass
 
 ⸻
 
+⚠️ Important Observations (Interview Gold 💡)
+
+* This is DP + partition problem
+* Classic structure:
+
+dp[i][j] = min cost to partition first i elements into j blocks
+
+* Transition:
+
+try all possible last block endings
+
+* Precompute:
+    * min in range
+    * max in range
+        (or compute on the fly — n=500 allows O(n³) borderline)
+
+⸻
+
 If you want next step, I can:
 
-* 🔥 Show optimal DP approach (this is NOT normal knapsack, there’s a twist)
-* ⚡ Optimize to pass all constraints cleanly
-* 🎯 Give interview-style explanation + edge cases
+* 🚀 Give optimized DP (O(n²k))
+* 🧩 Show how to precompute min/max smartly
+* 🎯 Walk like interviewer (this one is tricky!)
 
 Just say “solve it” 👍
